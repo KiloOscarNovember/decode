@@ -460,5 +460,4 @@ def secom_d(c,key):
 
     return "".join(p)
 
-# end of definition. Below are used for test.#
-## test editting
+# end of definition. Below are used for test.
