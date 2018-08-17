@@ -1,23 +1,105 @@
+from transposition import *
+from common import *
 list_A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 list_a=list_A.lower()
 list_0="0123456789"
+list_0_for_atbash="123456789"
+morse_code = {
+        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',  'F': '..-.',
+        'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+        'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+     	'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+        'Y': '-.--',   'Z': '--..',
+        '0': '-----',  '1': '.----',  '2': '..---', '3': '...--',  '4': '....-',  
+        '5': '.....', '6': '-....',  '7': '--...',  '8': '---..', '9': '----.', 
+        '.' : '.-.-.-', ',' : '--..--', ':' : '---...', '?' : '..--..',
+        "'" : '.----.', '-' : '-....-', '/' : '-..-.', '@' : '.--.-.', '=' : '-...-',
+        ' ' : '/'
+        }
 
+def decode_help():
+    txt='''Decode method HELP:
+        rot_a(c,k) : 1文字のみのRot. c:text, k:Rot num
+        vig_a(c,k,type) : 1文字のみのVig. c:text, k:key, type:"d"ならdecode, その他encode
+        rot(c,k) : Rot. c:text, k:Rot num
+        vig_e(c,k), vig_d(c,k): Vig encode & decode. c:text, k:key
+        vig_e_auto(c,k), vig_d_auto(c,k): Auto key Vig encode & decode. c:text, k:key
+        rev(c) : Reverse
+        kw(length) : 特定文字長のキーワードを返す
+        atbash(c)
+        playfair_a(c,mode,mx) :2文字のみのPlayfair. c:text, mode:"d"ならdecode, その他encode, mx:Matrixのサイズ。デフォルトは5だが6*6も同様に計算できる。
+        playfair_e, playfair_d
+        playfair_d6: 6*6matrixのplayfair
+        adfgx_e, adfgx_d(text, table_keyword, transposition_keyword)
+        adfgvx_e, adfgvx_d(text, table_keyword, transposition_keyword)
+        morse_d, morse_e (text, bin_code=False, delimiter=" ") : bin_code == Trueの場合、-.の代わりに01を使用したMorse. 
+        columnar_e, columnar_d (c,col) : colには順番のリストを入れる。キーワードからassign_digits(x)で生成できる
+        affine_e(text, a, b): aは掛け算、bは足し算部分
+        railfence_e, railfence_d(text, rails, offset=0)
+        '''
+    print(txt)
 
+def adfgx_e(text, table_keyword, transposition_keyword):
+    table = mixed_alphabet(table_keyword, True)
+    letter_set="ADFGX"
+    trimmed_text=text.replace(" ","").upper().replace("J","I")
+    
+    fractionated=""
+    for s in trimmed_text:
+        index=table.index(s)
+        row_num=int(index/5)
+        col_num=index %5
+        fractionated+=letter_set[row_num]
+        fractionated+=letter_set[col_num]
+        
+    return "".join(columnar_e(fractionated, assign_digits(transposition_keyword)))
 
-'''
-rot_a(c,k) : 1文字のみのRot. c:text, k:Rot num
-vig_a(c,k,type) : 1文字のみのVig. c:text, k:key, type:"d"ならdecode, その他encode
-rot(c,k) : Rot. c:text, k:Rot num
-vig_e(c,k), vig_d(c,k): Vig encode & decode. c:text, k:key
-vig_e_auto(c,k), vig_d_auto(c,k): Auto key Vig encode & decode. c:text, k:key
-rev(c) : Reverse
-kw(length) : 特定文字長のキーワードを返す
-atbash(c)
-playfair_a(c,mode,mx) :2文字のみのPlayfair. c:text, mode:"d"ならdecode, その他encode, mx:Matrixのサイズ。デフォルトは5だが6*6も同様に計算できる。
-playfair_e, playfair_d
-playfair_d6: 6*6matrixのplayfair
-'''
+def adfgx_d(text, table_keyword, transposition_keyword):
+    fractionated = columnar_d(text, assign_digits(transposition_keyword))
+    
+    table = mixed_alphabet(table_keyword, True)
+    letter_set="ADFGX"
+    
+    plain_text=""
+    for i,s in enumerate(fractionated):
+        if i %2 == 0:
+            row_num=letter_set.index(s)
+        else:
+            col_num=letter_set.index(s)
+            plain_text+=table[row_num*5 + col_num]
+            
+    return "".join(plain_text)
 
+def adfgvx_e(text, table_keyword, transposition_keyword):
+    table = mixed_alphanumeric(table_keyword)
+    letter_set="ADFGVX"
+    trimmed_text=text.replace(" ","").upper()
+    
+    fractionated=""
+    for s in trimmed_text:
+        index=table.index(s)
+        row_num=int(index/6)
+        col_num=index %6
+        fractionated+=letter_set[row_num]
+        fractionated+=letter_set[col_num]
+
+    return "".join(columnar_e(fractionated, assign_digits(transposition_keyword)))
+
+def adfgvx_d(text, table_keyword, transposition_keyword):
+    fractionated = columnar_d(text, assign_digits(transposition_keyword))
+    
+    table = mixed_alphanumeric(table_keyword)
+    letter_set="ADFGVX"
+    
+    plain_text=""
+    for i,s in enumerate(fractionated):
+        if i %2 == 0:
+            row_num=letter_set.index(s)
+        else:
+            col_num=letter_set.index(s)
+            plain_text+=table[row_num*6 + col_num]
+            
+    return "".join(plain_text)
 
 def rot_a(c,k):
     if list_A.find(c) >=0:
@@ -52,7 +134,6 @@ def rot(c,k):
     for i in range(l):
         p+=rot_a(c[i],k)
     return p
-
 
 def vig_e(c,k):
     l_c=len(c)
@@ -90,9 +171,6 @@ def vig_d_auto(c,k):
         k+=vig_a(c[i],s,"d")
     return p
 
-def rev(c):
-    return c[::-1]
-
 def kw(length):
     import csv
     kw=open("kw.txt")
@@ -105,10 +183,10 @@ def kw(length):
 def atbash(c):
     list_A_atbash =rev(list_A)
     list_a_atbash=list_A_atbash.lower()
-    list_0_atbash="0987654321"
+    list_0_atbash=rev(list_0_for_atbash)
     tr_A=str.maketrans(list_A,list_A_atbash)
     tr_a=str.maketrans(list_a,list_a_atbash)
-    tr_0=str.maketrans(list_0,list_0_atbash)
+    tr_0=str.maketrans(list_0_for_atbash,list_0_atbash)
     return(c.translate(tr_A).translate(tr_a).translate(tr_0))
 
 def playfair_a(c,mode,mx):
@@ -120,7 +198,6 @@ def playfair_a(c,mode,mx):
     if mx==6:
         key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     else:
-        mx=5
         key = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
     c=c.upper()
     t0=key.index(c[0])
@@ -186,142 +263,62 @@ def playfair_d6(c):
     
     return p    
 
-def assign_digits(x):
-    a=[0]*len(x)
+def morse_e(text, bin_code=False, delimiter = " "):
+    text=text.upper()
+    converted=""
 
-    for i in range(len(x)):
-        a[i]=[x[i],i]
-        
-    a.sort(key=lambda t:(t[0],t[1]))
+    for s in text[:]:
+        if s in morse_code:
+            converted+=morse_code[s] + delimiter
+        else:
+            converted+=s + delimiter
+    
+    if bin_code:
+        converted=replace_all(converted,{"-":"0", ".":"1"})
+    
+    return converted
 
-    b=[0]*len(x)
-    for i in range(len(x)):
-        b[i]=a[i][1]
-        
-    c=[0]*len(x)
-    for i in range(len(x)):
-        c[b[i]]=i+1
+def morse_d(text, bin_code=False, delimiter=" "):
+    if bin_code:
+        morse_code_inv = dict((replace_all(j,{"-":"0", ".":"1"}),i) for (i,j) in morse_code.items())
+    else:
+        morse_code_inv = dict((j,i) for (i,j) in morse_code.items())
+    
+    code_string = text.split(delimiter)
+    converted=""
+    for s in code_string:
+        if s in morse_code_inv:
+            converted+=morse_code_inv[s]
+        elif len(s)>0:
+            converted+="[" + s + "]"
+    
+    return converted        
 
-    return c
+def affine_e_a(text, a, b):
+    if list_A.find(text) >=0:
+        list= list_A
+    elif list_a.find(text) >=0:
+        list= list_a
+    elif list_0.find(text) >=0:
+        list= list_0
+    else:
+        return text 
+    
+    l = len(list)
+    position = list.find(text)
+    converted= (position*a + b) % l
+    return "".join(list[converted])
+    
+def affine_e(text, a, b):
+    l=len(text)
+    converted=""
+    for i in range(l):
+        converted+=affine_e_a(text[i], a, b)
+    return converted
 
-def columnar_e(c,col):
-    p=[0]*len(c)
-    left_col_cnt =len(c) % len(col)
-    row_cnt1 = int(len(c)/len(col))+1
-    row_cnt2 = int(len(c)/len(col))
-    
-    i=0
-    for j in range(len(col)):
-        ind=col.index(j+1)
-        if ind<left_col_cnt:
-            row_cnt=row_cnt1
-        else:
-            row_cnt=row_cnt2
-        for k in range(row_cnt):
-            p[i]=c[k*len(col)+ind]
-            i+=1
-            
-    return p
-    
-def columnar_d(c,col):
-    p=[0]*len(c)
-    left_col_cnt =len(c) % len(col)
-    row_cnt1 = int(len(c)/len(col))+1
-    row_cnt2 = int(len(c)/len(col))
-
-    i=0
-    for j in range(len(col)):
-        ind=col.index(j+1)
-        if ind<left_col_cnt:
-            row_cnt=row_cnt1
-        else:
-            row_cnt=row_cnt2
-        for k in range(row_cnt):
-            p[k*len(col)+ind]=c[i]
-            i+=1
-        
-    return p
-  
-def disrupted_columnar_e(c,col):
-    rows_full=int(len(c)/len(col))
-    lastrow_len=len(c)%len(col)
-    
-    trans_pre=[0]*len(c) 
-    ord_x=0
-    curr_len=len(col)
-    cnt = 0
-    for i in range(rows_full):
-        if curr_len == len(col):
-            ord_x+=1
-            curr_len=col.index(ord_x)
-        else:
-            curr_len+=1
-        for j in range(curr_len):
-            trans_pre[i*len(col)+j]=c[cnt]
-            cnt+=1
-    
-    if lastrow_len>0:
-        for j in range(lastrow_len):
-            trans_pre[rows_full*len(col)+j]=c[cnt]
-            cnt+=1
-    
-    ord_x=0
-    curr_len=len(col)
-    for i in range(rows_full):
-        if curr_len == len(col):
-            ord_x+=1
-            curr_len=col.index(ord_x)
-        else:
-            curr_len+=1
-        for j in range(curr_len,len(col)):
-            trans_pre[i*len(col)+j]=c[cnt]
-            cnt+=1
-    
-    p = columnar_e(trans_pre, col)
-    return p
-
-def disrupted_columnar_d(c,col):
-    rows_full=int(len(c)/len(col))
-    lastrow_len=len(c)%len(col)
-    trans_pre=columnar_d(c, col)
-    
-    p=[0]*len(c) 
-    ord_x=0
-    curr_len=len(col)
-    cnt = 0
-    for i in range(rows_full):
-        if curr_len == len(col):
-            ord_x+=1
-            curr_len=col.index(ord_x)
-        else:
-            curr_len+=1
-        for j in range(curr_len):
-            p[cnt]=trans_pre[i*len(col)+j]
-            cnt+=1
-    
-    if lastrow_len>0:
-        for j in range(lastrow_len):
-            p[cnt]=trans_pre[rows_full*len(col)+j]
-            cnt+=1
-    
-    ord_x=0
-    curr_len=len(col)
-    for i in range(rows_full):
-        if curr_len == len(col):
-            ord_x+=1
-            curr_len=col.index(ord_x)
-        else:
-            curr_len+=1
-        for j in range(curr_len,len(col)):
-            p[cnt]=trans_pre[i*len(col)+j]
-            cnt+=1
-    
-    return p
-          
 # SECOM cipher
 # http://users.telenet.be/d.rijmenants/en/secom.htm
 # http://kryptografie.de/kryptografie/chiffre/secom.htm
-
 
 def chain_addition(x):
     y=[0]*10
@@ -461,3 +458,11 @@ def secom_d(c,key):
     return "".join(p)
 
 # end of definition. Below are used for test.
+if __name__ ==  '__main__':
+#    print("")
+#    print(adfgvx_e("attack at 1200 AM", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
+#    print(adfgvx_d("DGDDDAGDDGAFADDFDADVDVFAADVX", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
+#    decode_help()
+#    print(morse_e("morse code", True))
+#    print(morse_d("00 000 101 111 1 / 0101 000 011 1 ",True))
+    print(affine_e("Affine cipher 0123",5,8))

@@ -114,3 +114,36 @@ def disrupted_columnar_d(c,col):
             cnt+=1
     
     return p
+    
+def railfence_e(text, rails, offset=0):
+    place=[["",0] for j in range(len(text) + offset)] 
+    line_cycle = list(range(rails)) + list(range(rails-1)[:0:-1])
+    for i in range(len(text)):
+        place[i + offset] = [text[i], line_cycle[(i + offset) %(rails*2 -2)]]
+    
+    result =""
+    for i in range(rails):
+        for s in place:
+            if s[1] == i:
+                result+=s[0]
+    return result
+
+def railfence_d(text, rails, offset=0):
+    place=[["",0] for j in range(len(text) + offset)] 
+    line_cycle = list(range(rails)) + list(range(rails-1)[:0:-1])
+    for i in range(len(text)):
+        place[i + offset] = ["", line_cycle[(i + offset) %(rails*2 -2)]]
+    
+    t = 0
+    for i in range(rails):
+        for j in range(len(text)):
+            if place[j + offset][1] == i:
+                place[j + offset][0]=text[t]
+                t+=1
+    
+    result = ""
+    for s in place:
+        result += s[0]
+    return result
+    
+
