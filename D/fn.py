@@ -1,28 +1,13 @@
 from transposition import *
 from common import *
-list_A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-list_a=list_A.lower()
-list_0="0123456789"
-list_0_for_atbash="123456789"
-morse_code = {
-        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',  'F': '..-.',
-        'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
-        'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
-     	'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
-        'Y': '-.--',   'Z': '--..',
-        '0': '-----',  '1': '.----',  '2': '..---', '3': '...--',  '4': '....-',  
-        '5': '.....', '6': '-....',  '7': '--...',  '8': '---..', '9': '----.', 
-        '.' : '.-.-.-', ',' : '--..--', ':' : '---...', '?' : '..--..',
-        "'" : '.----.', '-' : '-....-', '/' : '-..-.', '@' : '.--.-.', '=' : '-...-',
-        ' ' : '/'
-        }
+from code_tables import *
 
 def decode_help():
     txt='''Decode method HELP:
         rot_a(c,k) : 1文字のみのRot. c:text, k:Rot num
         vig_a(c,k,type) : 1文字のみのVig. c:text, k:key, type:"d"ならdecode, その他encode
         rot(c,k) : Rot. c:text, k:Rot num
-        vig_e(c,k), vig_d(c,k): Vig encode & decode. c:text, k:key
+        vig_e(c,k), vig_d(c,k), beaufort(c,k): Vig encode & decode, Beaufort. c:text, k:key
         vig_e_auto(c,k), vig_d_auto(c,k): Auto key Vig encode & decode. c:text, k:key
         rev(c) : Reverse
         kw(length) : 特定文字長のキーワードを返す
@@ -33,6 +18,7 @@ def decode_help():
         adfgx_e, adfgx_d(text, table_keyword, transposition_keyword)
         adfgvx_e, adfgvx_d(text, table_keyword, transposition_keyword)
         morse_d, morse_e (text, bin_code=False, delimiter=" ") : bin_code == Trueの場合、-.の代わりに01を使用したMorse. 
+        bacon1_d, bacon1_e, bacon2_d, bacon2_e : Bacon cipher. 入力の仕方はmorseと同じ。Bacon1はIとJ, UとVを同一視する。Bacon2はいずれも別々に処理。 
         columnar_e, columnar_d (c,col) : colには順番のリストを入れる。キーワードからassign_digits(x)で生成できる
         affine_e(text, a, b): aは掛け算、bは足し算部分
         railfence_e, railfence_d(text, rails, offset=0)
@@ -101,7 +87,30 @@ def adfgvx_d(text, table_keyword, transposition_keyword):
             
     return "".join(plain_text)
 
-def rot_a(c,k):
+def rot_a(c, k, type="encode"):
+    if list_A.find(c) >=0:
+        list= list_A
+    elif list_a.find(c) >=0:
+        list= list_a
+    elif list_0.find(c) >=0:
+        list= list_0
+    else:
+        return c 
+    
+    l = len(list)
+    position = list.find(c)
+
+    if type == "encode":
+        p= (position + k) % l
+    elif type == "decode":
+        p= (position - k) % l
+    elif type == "beaufort":
+        p= (k - position) % l
+    else:
+        p= c
+    return list[p]
+
+def beaufort_a(c,k):
     if list_A.find(c) >=0:
         list= list_A
     elif list_a.find(c) >=0:
@@ -124,9 +133,7 @@ def vig_a(c,k,type):
         t=list_0.find(k)
     if t<0:
         t=0
-    if type=="d":
-        t=-t
-    return rot_a(c,t)
+    return rot_a(c,t, type)
 
 def rot(c,k):
     l=len(c)
@@ -141,7 +148,7 @@ def vig_e(c,k):
     p=""
     for i in range(l_c):
         s=k[i % l_k]
-        p+=vig_a(c[i],s,"e")
+        p+=vig_a(c[i],s,"encode")
     return p
 
 def vig_d(c,k):
@@ -150,7 +157,16 @@ def vig_d(c,k):
     p=""
     for i in range(l_c):
         s=k[i % l_k]
-        p+=vig_a(c[i],s,"d")
+        p+=vig_a(c[i],s,"decode")
+    return p
+
+def beaufort(c,k):
+    l_c=len(c)
+    l_k=len(k)
+    p=""
+    for i in range(l_c):
+        s=k[i % l_k]
+        p+=vig_a(c[i],s,"beaufort")
     return p
 
 def vig_e_auto(c,k):
@@ -265,34 +281,24 @@ def playfair_d6(c):
 
 def morse_e(text, bin_code=False, delimiter = " "):
     text=text.upper()
-    converted=""
-
-    for s in text[:]:
-        if s in morse_code:
-            converted+=morse_code[s] + delimiter
-        else:
-            converted+=s + delimiter
-    
-    if bin_code:
-        converted=replace_all(converted,{"-":"0", ".":"1"})
-    
-    return converted
+    return code_table_e(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter = " ")
 
 def morse_d(text, bin_code=False, delimiter=" "):
-    if bin_code:
-        morse_code_inv = dict((replace_all(j,{"-":"0", ".":"1"}),i) for (i,j) in morse_code.items())
-    else:
-        morse_code_inv = dict((j,i) for (i,j) in morse_code.items())
-    
-    code_string = text.split(delimiter)
-    converted=""
-    for s in code_string:
-        if s in morse_code_inv:
-            converted+=morse_code_inv[s]
-        elif len(s)>0:
-            converted+="[" + s + "]"
-    
-    return converted        
+    return code_table_d(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter = " ")    
+
+def bacon1_e(text, bin_code=False, delimiter = " "):
+    text=text.upper()
+    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")
+
+def bacon1_d(text, bin_code=False, delimiter=" "):
+    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")    
+
+def bacon2_e(text, bin_code=False, delimiter = " "):
+    text=text.upper()
+    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")
+
+def bacon2_d(text, bin_code=False, delimiter=" "):
+    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")    
 
 def affine_e_a(text, a, b):
     if list_A.find(text) >=0:
@@ -463,6 +469,8 @@ if __name__ ==  '__main__':
 #    print(adfgvx_e("attack at 1200 AM", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
 #    print(adfgvx_d("DGDDDAGDDGAFADDFDADVDVFAADVX", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
 #    decode_help()
-#    print(morse_e("morse code", True))
-#    print(morse_d("00 000 101 111 1 / 0101 000 011 1 ",True))
-    print(affine_e("Affine cipher 0123",5,8))
+#     print(bacon1_e("morse code", True))
+#    print(bacon1_d("01011 01101 10000 10001 00100 / 00010 01101 00011 00100 ", True))
+#     print(morse_d("00 000 101 111 1 / 0101 000 011 1 ",True))
+#    print(affine_e("Affine cipher 0123",5,8))
+    print(beaufort("teststrings","beaufort"))
