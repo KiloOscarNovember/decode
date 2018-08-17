@@ -1,6 +1,7 @@
 from transposition import *
 from common import *
 from code_tables import *
+from base_conversion import *
 
 def decode_help():
     txt='''Decode method HELP:
@@ -23,6 +24,7 @@ def decode_help():
         affine_e(text, a, b): aは掛け算、bは足し算部分
         railfence_e, railfence_d(text, rails, offset=0)
         bifid_e, bifid_d(text, table_keyword="")
+        abc012(text)
         '''
     print(txt)
 
@@ -160,7 +162,7 @@ def vig_e_auto(c,k):
     p=""
     for i in range(l_c):
         s=k[i]
-        p+=vig_a(c[i],s,"e")
+        p+=vig_a(c[i],s,"encode")
         k+=c[i]
     return p
 
@@ -169,8 +171,8 @@ def vig_d_auto(c,k):
     p=""
     for i in range(l_c):
         s=k[i]
-        p+=vig_a(c[i],s,"d")
-        k+=vig_a(c[i],s,"d")
+        p+=vig_a(c[i],s,"decode")
+        k+=vig_a(c[i],s,"decode")
     return p
 
 def kw(length):
@@ -306,25 +308,29 @@ def bifid_d(text, table_keyword=""):
 
 def morse_e(text, bin_code=False, delimiter = " "):
     text=text.upper()
-    return code_table_e(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter = " ")
+    return code_table_e(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter)
 
 def morse_d(text, bin_code=False, delimiter=" "):
-    return code_table_d(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter = " ")    
+    return code_table_d(text, morse_code_table, {"-":"0", ".":"1"}, bin_code, delimiter)    
 
 def bacon1_e(text, bin_code=False, delimiter = " "):
     text=text.upper()
-    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")
+    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter)
 
 def bacon1_d(text, bin_code=False, delimiter=" "):
-    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")    
+    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter)    
 
 def bacon2_e(text, bin_code=False, delimiter = " "):
     text=text.upper()
-    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")
+    return code_table_e(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter)
 
 def bacon2_d(text, bin_code=False, delimiter=" "):
-    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter = " ")    
+    return code_table_d(text, bacon1_table, {"a":"0", "b":"1"}, bin_code, delimiter)    
 
+def abc012(text, delimiter = " "):
+    text=text.upper()
+    return code_table_e(text, abc012_table, {}, False, delimiter)
+    
 def affine_e_a(text, a, b):
     if list_A.find(text) >=0:
         list= list_A
