@@ -37,6 +37,7 @@ list_A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 list_a=list_A.lower()
 list_0="0123456789"
 list_0_for_atbash="123456789"
+polybius_table = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 
 morse_code_table = {
         'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',  'F': '..-.',

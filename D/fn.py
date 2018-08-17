@@ -13,7 +13,7 @@ def decode_help():
         kw(length) : 特定文字長のキーワードを返す
         atbash(c)
         playfair_a(c,mode,mx) :2文字のみのPlayfair. c:text, mode:"d"ならdecode, その他encode, mx:Matrixのサイズ。デフォルトは5だが6*6も同様に計算できる。
-        playfair_e, playfair_d
+        playfair_e, playfair_d(text, table_keyword="")
         playfair_d6: 6*6matrixのplayfair
         adfgx_e, adfgx_d(text, table_keyword, transposition_keyword)
         adfgvx_e, adfgvx_d(text, table_keyword, transposition_keyword)
@@ -22,6 +22,7 @@ def decode_help():
         columnar_e, columnar_d (c,col) : colには順番のリストを入れる。キーワードからassign_digits(x)で生成できる
         affine_e(text, a, b): aは掛け算、bは足し算部分
         railfence_e, railfence_d(text, rails, offset=0)
+        bifid_e, bifid_d(text, table_keyword="")
         '''
     print(txt)
 
@@ -108,21 +109,6 @@ def rot_a(c, k, type="encode"):
         p= (k - position) % l
     else:
         p= c
-    return list[p]
-
-def beaufort_a(c,k):
-    if list_A.find(c) >=0:
-        list= list_A
-    elif list_a.find(c) >=0:
-        list= list_a
-    elif list_0.find(c) >=0:
-        list= list_0
-    else:
-        return c 
-    
-    l = len(list)
-    position = list.find(c)
-    p= (position + k) % l
     return list[p]
 
 def vig_a(c,k,type):
@@ -214,7 +200,7 @@ def playfair_a(c,mode,mx):
     if mx==6:
         key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     else:
-        key = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
+        key = polybius_table
     c=c.upper()
     t0=key.index(c[0])
     t1=key.index(c[1])
@@ -278,6 +264,45 @@ def playfair_d6(c):
         p+=playfair_a(c[i:i+2],"d",6) 
     
     return p    
+
+def bifid_e(text, table_keyword=""):
+    table = mixed_alphabet(table_keyword, True)
+    text=text.upper().replace("J","I")
+    coordinates=[[0,0] for i in range(len(text))]
+    for i in range(len(text)):
+        index = table.index(text[i])
+        coordinates[i]=[int(index/5), index %5]
+    
+    transposed_coordinates = [0]*len(text)*2
+    for i in range(len(text)):
+        transposed_coordinates[i]=coordinates[i][0]
+        transposed_coordinates[i+len(text)]=coordinates[i][1]
+    
+    result = ""
+    for i in range(len(text)):
+        result += table[transposed_coordinates[2*i]*5+transposed_coordinates[2*i+1]]
+    
+    return result
+
+def bifid_d(text, table_keyword=""):
+    table = mixed_alphabet(table_keyword, True)
+    text=text.upper().replace("J","I")
+    
+    transposed_coordinates = [0]*len(text)*2
+    for i in range(len(text)):
+        index = table.index(text[i])
+        transposed_coordinates[2*i]= int(index/5)
+        transposed_coordinates[2*i + 1]= index %5
+    
+    coordinates=[[0,0] for i in range(len(text))]
+    for i in range(len(text)):
+        coordinates[i]=[transposed_coordinates[i], transposed_coordinates[i + len(text)]]
+    
+    result = ""
+    for i in range(len(text)):
+        result += table[coordinates[i][0]*5+coordinates[i][1]]
+    
+    return result
 
 def morse_e(text, bin_code=False, delimiter = " "):
     text=text.upper()
@@ -473,4 +498,5 @@ if __name__ ==  '__main__':
 #    print(bacon1_d("01011 01101 10000 10001 00100 / 00010 01101 00011 00100 ", True))
 #     print(morse_d("00 000 101 111 1 / 0101 000 011 1 ",True))
 #    print(affine_e("Affine cipher 0123",5,8))
-    print(beaufort("teststrings","beaufort"))
+#    print(beaufort("teststrings","beaufort"))
+    print(bifid_d("UAEOLWRINS", "bgwkzqpndsioaxefclumthyvr"))
