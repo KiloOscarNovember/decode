@@ -11,7 +11,7 @@ def decode_help():
         vig_e(c,k), vig_d(c,k), beaufort(c,k): Vig encode & decode, Beaufort. c:text, k:key
         vig_e_auto(c,k), vig_d_auto(c,k): Auto key Vig encode & decode. c:text, k:key
         rev(c) : Reverse
-        kw(length) : 特定文字長のキーワードを返す
+        kw(lregexp) : 正規表現にマッチする
         atbash(c)
         playfair_a(c,mode,mx) :2文字のみのPlayfair. c:text, mode:"d"ならdecode, その他encode, mx:Matrixのサイズ。デフォルトは5だが6*6も同様に計算できる。
         playfair_e, playfair_d(text, table_keyword="")
@@ -25,6 +25,7 @@ def decode_help():
         railfence_e, railfence_d(text, rails, offset=0)
         bifid_e, bifid_d(text, table_keyword="")
         abc012(text)
+        hexbash(c)
         '''
     print(txt)
 
@@ -175,13 +176,14 @@ def vig_d_auto(c,k):
         k+=vig_a(c[i],s,"decode")
     return p
 
-def kw(length):
+def kw(regexp):
     import csv
+    import re
     kw=open("kw.txt")
     list_all = []
     for row in csv.reader(kw):
         list_all.append(row[0])
-    list=[w for w in list_all if len(w)==length]
+    list=[w for w in list_all if re.match(regexp, w)]
     return(list)
 
 def atbash(c):
@@ -192,6 +194,12 @@ def atbash(c):
     tr_a=str.maketrans(list_a,list_a_atbash)
     tr_0=str.maketrans(list_0_for_atbash,list_0_atbash)
     return(c.translate(tr_A).translate(tr_a).translate(tr_0))
+
+def hexbash(c):
+    c=c.lower()
+    list_hex_atbash =rev(list_hex)
+    tr_hex=str.maketrans(list_hex,list_hex_atbash)
+    return(c.translate(tr_hex))
 
 def playfair_a(c,mode,mx):
     if mode=="d":
@@ -228,7 +236,7 @@ def playfair_a(c,mode,mx):
     return p
     
 def playfair_e(c):
-    c=c.upper()
+    c=c.upper().replace("J","I")
     if len(c)%2 ==1:
         c+="X"
     p=""
@@ -238,7 +246,7 @@ def playfair_e(c):
     return p    
 
 def playfair_d(c):
-    c=c.upper()
+    c=c.upper().replace("J","I")
     if len(c)%2 ==1:
         c+="X"
     p=""
@@ -266,6 +274,25 @@ def playfair_d6(c):
         p+=playfair_a(c[i:i+2],"d",6) 
     
     return p    
+    
+def polybius_e(text, table_keyword=""):
+    table = mixed_alphabet(table_keyword, True)
+    text=text.upper().replace("J","I")
+    coordinates=[]
+    for i in range(len(text)):
+        index = table.index(text[i])
+        coordinates.append(str(int(index/5)+1))
+        coordinates.append(str((index %5)+1))
+    return "".join(coordinates)
+    
+def polybius_d(text, table_keyword=""):
+    table = mixed_alphabet(table_keyword, True)
+    remain=""
+    if len(text) %2 ==1:
+        remain = "[" + text[-1] +"]"
+        text=text[0:-1]
+    result = [table[(int(text[i])-1)*5 + (int(text[i+1])-1)] for i in range(0,len(text),2)]
+    return "".join(result)+ remain
 
 def bifid_e(text, table_keyword=""):
     table = mixed_alphabet(table_keyword, True)
@@ -496,6 +523,7 @@ def secom_d(c,key):
 
 # end of definition. Below are used for test.
 if __name__ ==  '__main__':
+    12
 #    print("")
 #    print(adfgvx_e("attack at 1200 AM", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
 #    print(adfgvx_d("DGDDDAGDDGAFADDFDADVDVFAADVX", "na1c3h8tb2ome5wrpd4f6g7i9j0klqsuvxyz", "privacy"))
@@ -505,4 +533,8 @@ if __name__ ==  '__main__':
 #     print(morse_d("00 000 101 111 1 / 0101 000 011 1 ",True))
 #    print(affine_e("Affine cipher 0123",5,8))
 #    print(beaufort("teststrings","beaufort"))
-    print(bifid_d("UAEOLWRINS", "bgwkzqpndsioaxefclumthyvr"))
+#    print(bifid_d("UAEOLWRINS", "bgwkzqpndsioaxefclumthyvr"))
+#    print(polybius_d("52211533243324331543444423432444235214"))
+#    print(polybius_e("WFENININESTTHSITHWD"))
+#    print(kw(".*nest.*"))
+#    print(hexbash("01359ab"))

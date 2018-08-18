@@ -146,4 +146,10 @@ def railfence_d(text, rails, offset=0):
         result += s[0]
     return result
     
-
+def rect(text, col):
+    result=""
+    for i in range(len(text)):
+        result+=text[i]
+        if i %col == col-1:
+            result+='\n'
+    print(result)

@@ -1,3 +1,4 @@
+from common import *
 def deca(list):
     result = ""
     for i in list:
@@ -9,6 +10,13 @@ def deca(list):
         else:
             result+=str(i)
     return result
+
+def deca_smart(text):
+    import re
+    list=re.findall(r"0[3-9][0-9]|[3-9][0-9]|1[0-2][0-9]",text)
+    print('Separated as : ',end='')
+    print(list)
+    return deca(list)
     
 def adec(list):
     result=[]
@@ -64,6 +72,21 @@ def hex_to_bin(c):
     b=[bin(int(i,16)).replace("0b","").zfill(4) for i in c]
     return "".join(b)
 
+def hexa(c):
+    return deca([int(i,16) for i in split_by_len(c,2)])
+
+def uudecode(a, bin_output=False):
+    b="".join([bin(ord(i)-32).replace("0b","").zfill(6) for i in a])
+    length =len(b)
+    pad = -length %24
+    c=b.zfill(length + pad)
+    d=[c[i*8:(i+1)*8] for i in range(int(len(c)/8))]
+    e=[chr(int(i,2)) for i in d]
+    if bin_output:
+        return c
+    else:
+        return "".join(e)
+    
 #print(dechex(["a",100,97,65,66,51,300]))        
 #print(hexdec(['v', '0x64', '0x61', '0x41', '0x42', '0x33', '0x12c']))
 #print(adec(" ^+.(+@_@$~*~@~(~&@*!($+@%^+@^@(~(#($+#_~!"))
@@ -75,5 +98,6 @@ def hex_to_bin(c):
 #print(ascii85_to_hex(aaa))
 #print(bin_to_hex("01011110101101000110101"))
 #print(hex_to_bin("5eb46a"))
-c ="be077423c921606c05c88"
-print(hex_to_ascii85(c))
+#c ="be077423c921606c05c88"
+#print(hex_to_ascii85(c))
+#print(deca_smart('758184525566898279785057557278'))

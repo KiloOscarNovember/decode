@@ -44,3 +44,7 @@ def replace_all(text, dic):
     for i, j in dic.items():
         text = text.replace(i, j)
     return text
+
+def split_by_len(text, length):
+    return [text[i:i+length] for i in range(0,len(text),length)]
+
